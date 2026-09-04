@@ -1,0 +1,26 @@
+---
+interface Props {
+	value: number;
+	title: string;
+}
+
+const { value, title } = Astro.props;
+---
+
+<div class="progress" role="progressbar" aria-label={`Reading progress for ${title}`} aria-valuemin="0" aria-valuemax="100" aria-valuenow={value}>
+	<div class="progress__fill" style={`--progress:${value}%`}></div>
+</div>
+
+<style>
+	.progress {
+		width: 100%;
+		height: 1px;
+		background: #d8d8d4;
+	}
+	.progress__fill {
+		width: var(--progress);
+		height: 100%;
+		background: #11110f;
+		transform-origin: left center;
+	}
+</style>

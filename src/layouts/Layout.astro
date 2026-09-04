@@ -1,23 +1,196 @@
+---
+import { ClientRouter } from 'astro:transitions';
+
+interface Props {
+	title: string;
+	description: string;
+	noIndex?: boolean;
+	bodyClass?: string;
+}
+
+const { title, description, noIndex = false, bodyClass = '' } = Astro.props;
+---
+
 <!doctype html>
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="description" content={description} />
+		{noIndex && <meta name="robots" content="noindex, nofollow" />}
+		<meta name="theme-color" content="#ffffff" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2" />
 		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
+		<title>{title}</title>
+		<ClientRouter />
 	</head>
-	<body>
+	<body class={bodyClass}>
 		<slot />
+
+		<script>
+			const originKey = 'book-gallery-origin';
+			const restoreFocusKey = 'book-gallery-restore-focus';
+
+			function readOrigin() {
+				try {
+					return JSON.parse(sessionStorage.getItem(originKey) ?? 'null');
+				} catch {
+					return null;
+				}
+			}
+
+			function rememberBookOrigin(link: HTMLAnchorElement) {
+				const slug = link.dataset.bookSlug;
+				if (!slug) return;
+				sessionStorage.setItem(originKey, JSON.stringify({
+					slug,
+					path: `${location.pathname}${location.search}${location.hash}`,
+					at: Date.now(),
+				}));
+			}
+
+			function closeDetails(event?: Event) {
+				const origin = readOrigin();
+				const slug = location.pathname.match(/^\/books\/([^/]+)\/?$/)?.[1];
+				const cameFromGrid = origin?.slug === slug && Date.now() - origin.at < 3_600_000;
+
+				if (cameFromGrid) {
+					event?.preventDefault();
+					history.back();
+				}
+			}
+
+			document.addEventListener('click', (event) => {
+				const target = event.target as Element | null;
+				const bookLink = target?.closest<HTMLAnchorElement>('[data-book-slug]');
+				if (bookLink) rememberBookOrigin(bookLink);
+
+				const closeLink = target?.closest<HTMLAnchorElement>('[data-close-details]');
+				if (closeLink) closeDetails(event);
+			});
+
+			document.addEventListener('keydown', (event) => {
+				const restoredLink = document.activeElement?.closest<HTMLElement>('[data-restored-focus]');
+				if (event.key === 'Tab' && restoredLink) restoredLink.removeAttribute('data-restored-focus');
+
+				if (event.key !== 'Escape' || !document.querySelector('[data-detail-view]')) return;
+				const closeLink = document.querySelector<HTMLAnchorElement>('[data-close-details]');
+				if (!closeLink) return;
+				closeDetails(event);
+				if (!event.defaultPrevented) closeLink.click();
+			});
+
+			document.addEventListener('focusout', (event) => {
+				(event.target as HTMLElement | null)?.removeAttribute('data-restored-focus');
+			});
+
+			document.addEventListener('pointermove', () => {
+				document.querySelector<HTMLElement>('[data-restored-focus]')?.removeAttribute('data-restored-focus');
+			}, { passive: true });
+
+			document.addEventListener('astro:before-preparation', (event) => {
+				const slug = event.from.pathname.match(/^\/books\/([^/]+)\/?$/)?.[1];
+				if (slug && event.to.pathname === '/') sessionStorage.setItem(restoreFocusKey, slug);
+			});
+
+			document.addEventListener('astro:before-swap', (event) => {
+				const slug = event.from.pathname.match(/^\/books\/([^/]+)\/?$/)?.[1];
+				if (!slug || event.to.pathname !== '/') return;
+
+				const scene = event.newDocument.querySelector<HTMLElement>(
+					`[data-book-slug="${CSS.escape(slug)}"] .book-scene`,
+				);
+				scene?.style.setProperty('view-transition-class', 'selected-book');
+			});
+
+			document.addEventListener('astro:page-load', () => {
+				const heading = document.querySelector<HTMLElement>('[data-detail-heading]');
+				if (heading) {
+					heading.focus({ preventScroll: true });
+					return;
+				}
+
+				if (location.pathname === '/') {
+					const slug = sessionStorage.getItem(restoreFocusKey);
+					sessionStorage.removeItem(restoreFocusKey);
+					const link = slug
+						? document.querySelector<HTMLElement>(`[data-book-slug="${CSS.escape(slug)}"]`)
+						: null;
+					if (link) {
+						link.setAttribute('data-restored-focus', '');
+						link.focus({ preventScroll: true });
+						window.setTimeout(() => {
+							link.querySelector<HTMLElement>('.book-scene')?.style.removeProperty('view-transition-class');
+						}, 700);
+					}
+				}
+			});
+		</script>
 	</body>
 </html>
 
-<style>
-	html,
+<style is:global>
+	:root {
+		font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+		color: #11110f;
+		background: #fff;
+		font-synthesis: none;
+		text-rendering: optimizeLegibility;
+		--ease-quiet: cubic-bezier(0.22, 1, 0.36, 1);
+	}
+
+	* {
+		box-sizing: border-box;
+	}
+
+	html {
+		min-width: 320px;
+		background: #fff;
+		scrollbar-gutter: stable;
+	}
+
 	body {
 		margin: 0;
-		width: 100%;
-		height: 100%;
+		min-width: 320px;
+		min-height: 100vh;
+		background: #fff;
+	}
+
+	a { color: inherit; }
+	::selection { color: #fff; background: #171715; }
+
+	::view-transition-old(root),
+	::view-transition-new(root) {
+		animation: none;
+		mix-blend-mode: normal;
+	}
+
+	::view-transition-group(*) {
+		animation-duration: 620ms;
+		animation-timing-function: var(--ease-quiet);
+		overflow: visible;
+	}
+
+	::view-transition-group(.selected-book) {
+		z-index: 100;
+	}
+
+	::view-transition-image-pair(*),
+	::view-transition-old(*),
+	::view-transition-new(*) {
+		overflow: visible;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		html:focus-within { scroll-behavior: auto; }
+
+		*, *::before, *::after {
+			scroll-behavior: auto !important;
+			animation-duration: 1ms !important;
+			animation-iteration-count: 1 !important;
+			transition-duration: 1ms !important;
+		}
+
+		::view-transition-group(*) { animation-duration: 1ms; }
 	}
 </style>

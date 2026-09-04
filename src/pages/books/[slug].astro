@@ -1,0 +1,166 @@
+---
+import Book3D from '../../components/Book3D.astro';
+import BookDetails from '../../components/BookDetails.astro';
+import BookGrid from '../../components/BookGrid.astro';
+import Layout from '../../layouts/Layout.astro';
+import { books, usesPlaceholderData } from '../../lib/books';
+import type { Book } from '../../types/book';
+
+export function getStaticPaths() {
+	return books.map((book) => ({
+		params: { slug: book.slug },
+		props: { book },
+	}));
+}
+
+interface Props { book: Book; }
+const { book } = Astro.props;
+---
+
+<Layout
+	title={`${book.title} — Reading progress`}
+	description={`${book.title} by ${book.author}: reading progress and notes.`}
+	noIndex={usesPlaceholderData}
+	bodyClass="detail-page"
+>
+	<div class="background-gallery" aria-hidden="true" inert>
+		<div class="background-gallery__inner">
+			<BookGrid books={books} decorative />
+		</div>
+	</div>
+
+	<main class="focused-view" data-detail-view>
+		<a class="close-control" href="/" aria-label="Close book details" data-close-details>
+			<span aria-hidden="true">×</span>
+		</a>
+
+		<div class="focused-book">
+			<Book3D book={book} transitionName={`book-${book.slug}`} size="hero" eager />
+		</div>
+
+		<div class="focused-information">
+			<BookDetails book={book} />
+		</div>
+	</main>
+</Layout>
+
+<style>
+	.background-gallery {
+		position: fixed;
+		z-index: 0;
+		inset: -28px;
+		overflow: hidden;
+		pointer-events: none;
+		background: #fff;
+	}
+
+	.background-gallery__inner {
+		min-height: calc(100% + 56px);
+		opacity: 0.19;
+		filter: blur(13px);
+		transform: scale(1.025);
+		transform-origin: center top;
+		animation: gallery-soften 440ms var(--ease-quiet) both;
+	}
+
+	.background-gallery::after {
+		position: absolute;
+		content: '';
+		inset: 0;
+		background: rgba(255, 255, 255, 0.43);
+	}
+
+	.focused-view {
+		position: relative;
+		z-index: 1;
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+		min-height: 100svh;
+		padding: clamp(52px, 7vh, 82px) clamp(52px, 6vw, 112px);
+		overflow: clip;
+	}
+
+	.focused-book,
+	.focused-information {
+		display: flex;
+		align-items: center;
+		min-width: 0;
+	}
+
+	.focused-book {
+		justify-content: center;
+		padding-right: clamp(24px, 4vw, 68px);
+	}
+
+	.focused-information {
+		justify-content: flex-start;
+		padding-left: clamp(20px, 3vw, 54px);
+	}
+
+	.close-control {
+		position: fixed;
+		z-index: 4;
+		top: 17px;
+		right: 22px;
+		display: grid;
+		place-items: center;
+		width: 34px;
+		height: 34px;
+		color: #22221f;
+		font-size: 24px;
+		font-weight: 300;
+		line-height: 1;
+		text-decoration: none;
+		outline: none;
+		transition: opacity 180ms ease, transform 180ms ease;
+	}
+
+	.close-control:hover { opacity: 0.52; transform: rotate(4deg); }
+	.close-control:focus-visible { outline: 1px solid #11110f; outline-offset: 2px; }
+
+	@keyframes gallery-soften {
+		from { opacity: 0.7; filter: blur(0); transform: scale(1); }
+		to { opacity: 0.19; filter: blur(13px); transform: scale(1.025); }
+	}
+
+	@media (max-width: 899px) {
+		.focused-view {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			min-height: 100svh;
+			padding: 58px clamp(24px, 6vw, 52px) 76px;
+			overflow: visible;
+		}
+
+		.focused-book {
+			min-height: min(73svh, 660px);
+			padding: 18px 0 22px;
+		}
+
+		.focused-book :global(.book-scene--hero) {
+			--book-width: clamp(220px, 48vw, 320px);
+		}
+
+		.focused-information {
+			align-items: flex-start;
+			width: min(100%, 620px);
+			padding: 12px 0 0;
+		}
+	}
+
+	@media (max-width: 519px) {
+		.focused-view { padding-inline: 24px; }
+		.focused-book {
+			min-height: min(70svh, 560px);
+			padding-top: 0;
+		}
+		.focused-book :global(.book-scene--hero) { --book-width: clamp(205px, 58vw, 245px); }
+		.close-control { top: 10px; right: 12px; }
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.background-gallery__inner { animation: none; opacity: 0.19; filter: blur(13px); }
+		.close-control:hover { transform: none; }
+	}
+</style>

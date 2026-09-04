@@ -1,0 +1,132 @@
+---
+import ProgressBar from './ProgressBar.astro';
+import { getProgress } from '../lib/books';
+import type { Book } from '../types/book';
+
+interface Props { book: Book; }
+const { book } = Astro.props;
+const progress = getProgress(book);
+const statusLabels = { unread: 'Unread', reading: 'Reading', finished: 'Finished' } as const;
+const formatDate = (date: string) => new Intl.DateTimeFormat('en', {
+	year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC',
+}).format(new Date(`${date}T00:00:00Z`));
+---
+
+<section class="book-details" aria-labelledby="book-title">
+	<p class="book-details__year">{book.publicationYear}</p>
+	<h1 id="book-title" tabindex="-1" data-detail-heading>{book.title}</h1>
+	<p class="book-details__author">{book.author}</p>
+
+	<div class="book-details__progress-meta">
+		<span>{statusLabels[book.status]}</span>
+		<span>{book.pagesRead} / {book.pageCount || '—'} pages</span>
+	</div>
+	<ProgressBar value={progress} title={book.title} />
+	<p class="book-details__percent">{progress}%</p>
+
+	<div class="book-details__synopsis">
+		<h2>Synopsis</h2>
+		<p>{book.synopsis}</p>
+	</div>
+
+	{(book.startedAt || book.finishedAt) && (
+		<dl class="book-details__dates">
+			{book.startedAt && <><dt>Started</dt><dd>{formatDate(book.startedAt)}</dd></>}
+			{book.finishedAt && <><dt>Finished</dt><dd>{formatDate(book.finishedAt)}</dd></>}
+		</dl>
+	)}
+</section>
+
+<style>
+	.book-details {
+		width: min(100%, 590px);
+		animation: details-in 360ms 150ms var(--ease-quiet) both;
+	}
+
+	.book-details__year,
+	.book-details__progress-meta,
+	.book-details__percent,
+	.book-details__synopsis h2,
+	.book-details__dates {
+		font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 11px;
+		line-height: 1.4;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+	}
+
+	.book-details__year {
+		margin: 0 0 18px;
+		color: #777772;
+	}
+
+	h1 {
+		max-width: 12ch;
+		margin: 0;
+		font-size: clamp(42px, 5.2vw, 76px);
+		font-weight: 560;
+		line-height: 0.95;
+		letter-spacing: -0.055em;
+		outline: none;
+	}
+
+	.book-details__author {
+		margin: 19px 0 clamp(42px, 7vh, 68px);
+		color: #6e6e69;
+		font-size: clamp(17px, 1.45vw, 21px);
+		line-height: 1.35;
+	}
+
+	.book-details__progress-meta {
+		display: flex;
+		justify-content: space-between;
+		gap: 24px;
+		margin-bottom: 12px;
+		color: #464642;
+	}
+
+	.book-details__percent {
+		margin: 10px 0 0;
+		text-align: right;
+	}
+
+	.book-details__synopsis {
+		margin-top: clamp(42px, 7vh, 68px);
+	}
+
+	.book-details__synopsis h2 {
+		margin: 0 0 15px;
+		color: #777772;
+		font-weight: 500;
+	}
+
+	.book-details__synopsis p {
+		max-width: 58ch;
+		margin: 0;
+		font-size: clamp(16px, 1.25vw, 19px);
+		line-height: 1.62;
+		letter-spacing: -0.01em;
+	}
+
+	.book-details__dates {
+		display: grid;
+		grid-template-columns: max-content 1fr;
+		gap: 6px 22px;
+		margin: 34px 0 0;
+		color: #777772;
+	}
+
+	.book-details__dates dt { color: #a0a09a; }
+	.book-details__dates dd { margin: 0; }
+
+	@keyframes details-in {
+		from { opacity: 0; transform: translateY(10px); }
+		to { opacity: 1; transform: translateY(0); }
+	}
+
+	@media (max-width: 899px) {
+		.book-details { width: min(100%, 620px); }
+		h1 { max-width: 15ch; font-size: clamp(40px, 10vw, 64px); }
+		.book-details__author { margin-bottom: 46px; }
+	}
+</style>

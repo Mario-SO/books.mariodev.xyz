@@ -1,0 +1,85 @@
+---
+import Book3D from './Book3D.astro';
+import type { Book } from '../types/book';
+
+interface Props {
+	books: Book[];
+	decorative?: boolean;
+}
+
+const { books, decorative = false } = Astro.props;
+---
+
+<div class:list={['book-grid', { 'book-grid--decorative': decorative }]} aria-hidden={decorative ? 'true' : undefined} inert={decorative ? true : undefined}>
+	{books.map((book, index) => (
+		decorative ? (
+			<div class="book-grid__item">
+				<Book3D book={book} decorative />
+			</div>
+		) : (
+			<a
+				class="book-grid__item book-link"
+				href={`/books/${book.slug}/`}
+				aria-label={`Open ${book.title} by ${book.author}`}
+				data-book-slug={book.slug}
+			>
+				<Book3D book={book} transitionName={`book-${book.slug}`} eager={index < 6} />
+			</a>
+		)
+	))}
+</div>
+
+<style>
+	.book-grid {
+		display: grid;
+		grid-template-columns: repeat(5, minmax(0, 1fr));
+		gap: clamp(38px, 5vw, 76px) clamp(28px, 4vw, 68px);
+		width: min(1180px, 100%);
+		margin: 0 auto;
+		padding: clamp(54px, 8vh, 96px) clamp(26px, 5vw, 70px);
+	}
+
+	.book-grid__item {
+		display: grid;
+		place-items: center;
+		min-width: 0;
+		text-decoration: none;
+		outline: none;
+	}
+
+	.book-grid--decorative {
+		width: min(1180px, 100%);
+	}
+
+	@media (min-width: 1360px) {
+		.book-grid {
+			grid-template-columns: repeat(6, minmax(0, 1fr));
+			width: min(1330px, 100%);
+			column-gap: clamp(34px, 3.2vw, 58px);
+		}
+		.book-grid--decorative { width: min(1330px, 100%); }
+	}
+
+	@media (max-width: 1023px) {
+		.book-grid {
+			grid-template-columns: repeat(4, minmax(0, 1fr));
+			gap: 56px 28px;
+			padding-inline: 24px;
+		}
+	}
+
+	@media (max-width: 759px) {
+		.book-grid {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 60px 24px;
+		}
+	}
+
+	@media (max-width: 519px) {
+		.book-grid {
+			grid-template-columns: 1fr;
+			gap: 74px;
+			padding: 62px 24px 82px;
+		}
+	}
+</style>

@@ -1,0 +1,24 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Not found — Reading" description="The requested page could not be found." noIndex>
+	<main>
+		<p>404</p>
+		<h1>That book is not in this gallery.</h1>
+		<a href="/">Return to the books</a>
+	</main>
+</Layout>
+
+<style>
+	main {
+		display: grid;
+		place-content: center;
+		min-height: 100vh;
+		padding: 32px;
+		text-align: center;
+	}
+	p { margin: 0 0 18px; color: #888883; font: 11px/1.4 ui-monospace, monospace; letter-spacing: .1em; }
+	h1 { margin: 0; font-size: clamp(28px, 5vw, 52px); font-weight: 560; letter-spacing: -.045em; }
+	a { margin-top: 32px; color: #666662; font-size: 14px; text-underline-offset: 4px; }
+</style>

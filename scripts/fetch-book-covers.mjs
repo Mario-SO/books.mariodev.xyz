@@ -33,9 +33,9 @@ const covers = [
 	['a-storm-of-swords', randomHouseIsbn('9780553381702')],
 	['a-clash-of-kings', randomHouseIsbn('9780553381696')],
 	['a-game-of-thrones', randomHouseIsbn('9780553381689')],
-	['children-of-dune', randomHouseIsbn('9780593098240', 'fit')],
-	['dune-messiah', randomHouseIsbn('9780593098233', 'fit')],
-	['dune', randomHouseIsbn('9780441172719', 'fit')],
+	['children-of-dune', randomHouseIsbn('9780593098240', 'wide-fit')],
+	['dune-messiah', randomHouseIsbn('9780593098233', 'wide-fit')],
+	['dune', randomHouseIsbn('9780441172719', 'wide-fit')],
 	['the-way-of-kings', macmillanIsbn('9780765326355')],
 	['hyperion', direct('https://www.penguinlibros.com/es/4912050-thickbox_default/hyperion-los-cantos-de-hyperion-1.jpg', 'fit')],
 ];
@@ -92,13 +92,16 @@ try {
 				'-vf', 'crop=1000:1500:50:100,scale=700:1050',
 				...commonOutputArgs,
 			]);
-		} else if (source.fit === 'fit') {
+		} else if (source.fit === 'fit' || source.fit === 'wide-fit') {
+			const coverScale = source.fit === 'wide-fit'
+				? 'scale=704:1050'
+				: 'scale=700:1050:force_original_aspect_ratio=decrease';
 			await run('ffmpeg', [
 				'-hide_banner', '-loglevel', 'error', '-y', '-i', input,
 				'-filter_complex', [
 					'[0:v]split=2[background][cover]',
 					'[background]scale=700:1050:force_original_aspect_ratio=increase,crop=700:1050,gblur=sigma=34[background]',
-					'[cover]scale=700:1050:force_original_aspect_ratio=decrease[cover]',
+					`[cover]${coverScale}[cover]`,
 					'[background][cover]overlay=(W-w)/2:(H-h)/2',
 				].join(';'),
 				...commonOutputArgs,

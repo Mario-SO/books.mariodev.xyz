@@ -125,22 +125,24 @@ const coverLabel = `Cover of ${book.title} by ${book.author}`;
 
 	.book-contact-shadow {
 		position: absolute;
-		left: 17%;
-		right: 5%;
-		bottom: 2%;
-		height: 12%;
+		left: 15%;
+		right: 9%;
+		top: calc(var(--book-height) + 25px);
+		height: 10px;
 		border-radius: 50%;
-		background: rgba(15, 15, 13, 0.16);
-		filter: blur(8px);
-		transform: translate3d(6px, -2px, 0) scaleX(0.9);
+		background: rgba(15, 15, 13, 0.13);
+		filter: blur(5px);
+		transform: translate3d(2px, 0, 0) scaleX(0.94);
 		transition: transform 220ms var(--ease-quiet), opacity 220ms var(--ease-quiet);
 	}
 
 	.book-scene--hero .book-contact-shadow {
 		left: 14%;
-		bottom: 1.5%;
-		filter: blur(16px);
-		opacity: 0.72;
+		right: 12%;
+		top: calc(var(--book-height) + 39px);
+		height: 16px;
+		filter: blur(8px);
+		opacity: 0.8;
 	}
 
 	.book-back,
@@ -225,7 +227,7 @@ const coverLabel = `Cover of ${book.title} by ${book.author}`;
 	}
 
 	.book-scene--hero .book-front {
-		transform: translateZ(1px) rotateY(-17deg);
+		transform: translateZ(1px) rotateY(-10deg);
 		box-shadow: 5px 3px 8px rgba(12, 12, 10, 0.08), inset 1px 0 0 rgba(255, 255, 255, 0.14);
 	}
 
@@ -281,19 +283,19 @@ const coverLabel = `Cover of ${book.title} by ${book.author}`;
 
 	:global(.book-link:hover:not([data-restored-focus])) .book-volume,
 	:global(.book-link:focus-visible:not([data-restored-focus])) .book-volume {
-		transform: translateY(-6px) rotateX(1deg) rotateY(-11deg) rotateZ(-0.1deg);
+		transform: translateY(-3px) rotateX(1deg) rotateY(-12deg) rotateZ(-0.1deg);
 	}
 
 	:global(.book-link:hover:not([data-restored-focus])) .book-front,
 	:global(.book-link:focus-visible:not([data-restored-focus])) .book-front {
-		transform: translateZ(1px) rotateY(-13deg);
+		transform: translateZ(1px) rotateY(-7deg);
 		box-shadow: 4px 2px 7px rgba(12, 12, 10, 0.08), inset 1px 0 0 rgba(255, 255, 255, 0.14);
 	}
 
 	:global(.book-link:hover:not([data-restored-focus])) .book-contact-shadow,
 	:global(.book-link:focus-visible:not([data-restored-focus])) .book-contact-shadow {
 		opacity: 0.72;
-		transform: translate3d(9px, 0, 0) scaleX(0.82);
+		transform: translate3d(3px, 1px, 0) scaleX(0.9);
 	}
 
 	:global(.book-link:hover:not([data-restored-focus])) .book-page-side,
@@ -306,7 +308,7 @@ const coverLabel = `Cover of ${book.title} by ${book.author}`;
 		:global(.book-link:hover:not(:focus-visible)) .book-front { transform: translateZ(1px) rotateY(0deg); }
 		:global(.book-link:hover:not(:focus-visible)) .book-contact-shadow {
 			opacity: 1;
-			transform: translate3d(6px, -2px, 0) scaleX(0.9);
+			transform: translate3d(2px, 0, 0) scaleX(0.94);
 		}
 		:global(.book-link:hover:not(:focus-visible)) .book-page-side { opacity: 1; }
 	}

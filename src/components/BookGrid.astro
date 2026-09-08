@@ -1,5 +1,6 @@
 ---
 import Book3D from './Book3D.astro';
+import { getProgress } from '../lib/books';
 import type { Book } from '../types/book';
 
 interface Props {
@@ -8,6 +9,9 @@ interface Props {
 }
 
 const { books, decorative = false } = Astro.props;
+const statusLabel = (book: Book) => book.status === 'reading'
+	? `Reading · ${getProgress(book)}%`
+	: book.status === 'finished' ? 'Finished' : 'Unread';
 ---
 
 <div class:list={['book-grid', { 'book-grid--decorative': decorative }]} aria-hidden={decorative ? 'true' : undefined} inert={decorative ? true : undefined}>
@@ -20,10 +24,13 @@ const { books, decorative = false } = Astro.props;
 			<a
 				class="book-grid__item book-link"
 				href={`/books/${book.slug}/`}
-				aria-label={`Open ${book.title} by ${book.author}`}
+				aria-label={`Open ${book.title} by ${book.author}. ${statusLabel(book)}`}
 				data-book-slug={book.slug}
+				data-status={book.status}
+				data-search={`${book.title} ${book.author}`}
 			>
 				<Book3D book={book} transitionName={`book-${book.slug}`} eager={index < 6} />
+				<span class="book-status" aria-hidden="true">{statusLabel(book)}</span>
 			</a>
 		)
 	))}
@@ -40,12 +47,26 @@ const { books, decorative = false } = Astro.props;
 	}
 
 	.book-grid__item {
+		container-type: inline-size;
 		display: grid;
 		place-items: center;
 		min-width: 0;
 		text-decoration: none;
 		outline: none;
 	}
+
+	.book-grid__item[hidden] { display: none; }
+	.book-link { align-content: start; touch-action: manipulation; }
+	.book-link:focus-visible { outline: 1px solid #464642; outline-offset: 6px; border-radius: 2px; }
+	.book-status {
+		margin-top: 8px;
+		color: #6e6e69;
+		font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 11px;
+		line-height: 1.5;
+		font-variant-numeric: tabular-nums;
+	}
+	:global(book-shelf) .book-grid { padding-top: 28px; }
 
 	.book-grid--decorative {
 		width: min(1180px, 100%);
@@ -77,9 +98,9 @@ const { books, decorative = false } = Astro.props;
 
 	@media (max-width: 519px) {
 		.book-grid {
-			grid-template-columns: 1fr;
-			gap: 74px;
-			padding: 62px 24px 82px;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 38px 16px;
+			padding: 28px 20px 64px;
 		}
 	}
 </style>

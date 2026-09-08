@@ -99,6 +99,13 @@ const coverLabel = `Cover of ${book.title} by ${book.author}`;
 		perspective: 1700px;
 	}
 
+	.book-scene--grid {
+		--book-width: min(142px, calc(100cqi - 40px));
+		--book-height: calc(var(--book-width) * 1.5);
+		width: calc(var(--book-width) + 40px);
+	}
+	.book-scene--grid .book-volume { left: 20px; }
+
 	.book-volume {
 		position: absolute;
 		left: 30px;

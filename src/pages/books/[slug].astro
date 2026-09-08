@@ -104,8 +104,8 @@ const { book } = Astro.props;
 		right: 22px;
 		display: grid;
 		place-items: center;
-		width: 34px;
-		height: 34px;
+		width: 44px;
+		height: 44px;
 		color: #22221f;
 		font-size: 24px;
 		font-weight: 300;
@@ -134,12 +134,11 @@ const { book } = Astro.props;
 		}
 
 		.focused-book {
-			min-height: min(73svh, 660px);
-			padding: 18px 0 22px;
+			padding: 0 0 20px;
 		}
 
 		.focused-book :global(.book-scene--hero) {
-			--book-width: clamp(220px, 48vw, 320px);
+			--book-width: clamp(180px, min(32vw, 29svh), 260px);
 		}
 
 		.focused-information {
@@ -152,10 +151,9 @@ const { book } = Astro.props;
 	@media (max-width: 519px) {
 		.focused-view { padding-inline: 24px; }
 		.focused-book {
-			min-height: min(70svh, 560px);
-			padding-top: 0;
+			padding: 0 0 12px;
 		}
-		.focused-book :global(.book-scene--hero) { --book-width: clamp(205px, 58vw, 245px); }
+		.focused-book :global(.book-scene--hero) { --book-width: clamp(140px, min(42vw, 24svh), 190px); }
 		.close-control { top: 10px; right: 12px; }
 	}
 

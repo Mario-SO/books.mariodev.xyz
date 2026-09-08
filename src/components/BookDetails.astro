@@ -57,7 +57,7 @@ const formatDate = (date: string) => new Intl.DateTimeFormat('en', {
 
 	.book-details__year {
 		margin: 0 0 18px;
-		color: #777772;
+		color: #686863;
 	}
 
 	h1 {
@@ -96,7 +96,7 @@ const formatDate = (date: string) => new Intl.DateTimeFormat('en', {
 
 	.book-details__synopsis h2 {
 		margin: 0 0 15px;
-		color: #777772;
+		color: #686863;
 		font-weight: 500;
 	}
 
@@ -113,10 +113,10 @@ const formatDate = (date: string) => new Intl.DateTimeFormat('en', {
 		grid-template-columns: max-content 1fr;
 		gap: 6px 22px;
 		margin: 34px 0 0;
-		color: #777772;
+		color: #686863;
 	}
 
-	.book-details__dates dt { color: #a0a09a; }
+	.book-details__dates dt { color: #686863; }
 	.book-details__dates dd { margin: 0; }
 
 	@keyframes details-in {
@@ -128,5 +128,12 @@ const formatDate = (date: string) => new Intl.DateTimeFormat('en', {
 		.book-details { width: min(100%, 620px); }
 		h1 { max-width: 15ch; font-size: clamp(40px, 10vw, 64px); }
 		.book-details__author { margin-bottom: 46px; }
+	}
+	@media (max-width: 519px) {
+		h1 { font-size: clamp(32px, 9vw, 44px); text-wrap: balance; }
+		.book-details__year { margin-bottom: 12px; }
+		.book-details__author { margin: 14px 0 28px; }
+		.book-details__synopsis { margin-top: 32px; }
+		.book-details__progress-meta { gap: 12px; letter-spacing: 0.04em; }
 	}
 </style>

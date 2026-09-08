@@ -1,0 +1,152 @@
+---
+import BookGrid from './BookGrid.astro';
+import type { Book } from '../types/book';
+interface Props { books: Book[]; }
+const { books } = Astro.props;
+const filters = ['All', 'Reading', 'Finished', 'Unread'];
+---
+
+<book-shelf>
+	<div class="shelf-tools" data-shelf-tools hidden>
+		<div class="shelf-filters" role="group" aria-label="Filter books by reading status">
+			{filters.map((label) => (
+				<button type="button" data-filter={label.toLowerCase()} aria-pressed={label === 'All'}>{label}</button>
+			))}
+		</div>
+		<div class="shelf-search" role="search" aria-label="Search the bookshelf">
+			<label class="sr-only" for="book-search">Search by title or author</label>
+			<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="m16 16 4 4" /></svg>
+			<input id="book-search" name="q" type="search" placeholder="Title or author…" autocomplete="off" spellcheck="false" />
+		</div>
+	</div>
+	<p class="sr-only" role="status" aria-live="polite" aria-atomic="true" data-results></p>
+	<BookGrid books={books} />
+	<div class="shelf-empty" data-empty hidden>
+		<p>No books found.</p>
+		<button type="button" data-reset>Clear filters</button>
+	</div>
+</book-shelf>
+
+<script>
+	const normalize = (text: string) => text.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLocaleLowerCase();
+
+	function updateShelf(shelf: Element, url: URL) {
+		const requested = url.searchParams.get('status') ?? 'all';
+		const status = ['reading', 'finished', 'unread'].includes(requested) ? requested : 'all';
+		const query = url.searchParams.get('q') ?? '';
+		const input = shelf.querySelector<HTMLInputElement>('input');
+		if (input && input.value !== query) input.value = query;
+		const terms = normalize(query).trim().split(/\s+/).filter(Boolean);
+		let count = 0;
+		shelf.querySelectorAll<HTMLElement>('[data-book-slug]').forEach((book) => {
+			const matches = (status === 'all' || book.dataset.status === status)
+				&& terms.every((term) => normalize(book.dataset.search ?? '').includes(term));
+			book.hidden = !matches;
+			if (matches) count++;
+		});
+		shelf.querySelectorAll<HTMLButtonElement>('[data-filter]').forEach((button) => {
+			button.setAttribute('aria-pressed', String(button.dataset.filter === status));
+		});
+		const empty = shelf.querySelector<HTMLElement>('[data-empty]');
+		if (empty) empty.hidden = count > 0;
+		const results = shelf.querySelector('[data-results]');
+		if (results) results.textContent = `${count} ${count === 1 ? 'book' : 'books'}${status === 'all' ? '' : ` · ${status}`}${query.trim() ? ` matching “${query.trim()}”` : ''}`;
+	}
+
+	class BookShelf extends HTMLElement {
+		private controller?: AbortController;
+		connectedCallback() {
+			this.controller?.abort();
+			this.controller = new AbortController();
+			const { signal } = this.controller;
+			this.querySelector<HTMLElement>('[data-shelf-tools]')!.hidden = false;
+			const sync = () => updateShelf(this, new URL(location.href));
+			const change = (url: URL) => {
+				history.replaceState(history.state, '', url);
+				updateShelf(this, url);
+			};
+			this.addEventListener('input', (event) => {
+				if (!(event.target instanceof HTMLInputElement)) return;
+				const url = new URL(location.href);
+				if (event.target.value) url.searchParams.set('q', event.target.value);
+				else url.searchParams.delete('q');
+				change(url);
+			}, { signal });
+			this.addEventListener('click', (event) => {
+				const button = (event.target as Element).closest<HTMLButtonElement>('button');
+				if (!button) return;
+				const url = new URL(location.href);
+				if (button.hasAttribute('data-reset')) {
+					url.searchParams.delete('q');
+					url.searchParams.delete('status');
+					change(url);
+					this.querySelector<HTMLInputElement>('input')?.focus();
+				} else if (button.dataset.filter) {
+					if (button.dataset.filter === 'all') url.searchParams.delete('status');
+					else url.searchParams.set('status', button.dataset.filter);
+					change(url);
+				}
+			}, { signal });
+			window.addEventListener('popstate', sync, { signal });
+			document.addEventListener('astro:page-load', sync, { signal });
+			sync();
+		}
+		disconnectedCallback() { this.controller?.abort(); }
+	}
+	if (!customElements.get('book-shelf')) customElements.define('book-shelf', BookShelf);
+	// Apply the destination filters before Astro restores scroll and focus.
+	document.addEventListener('astro:before-swap', (event) => {
+		const shelf = event.newDocument.querySelector('book-shelf');
+		if (shelf) updateShelf(shelf, event.to);
+	});
+</script>
+
+<style>
+	book-shelf { display: block; }
+	[hidden] { display: none !important; }
+	.shelf-tools {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 24px;
+		width: min(1180px, 100%);
+		margin: 0 auto;
+		padding: 36px clamp(26px, 5vw, 70px) 0;
+		font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 12px;
+		line-height: 1.5;
+		color: #6e6e69;
+	}
+	.shelf-filters { display: flex; gap: 22px; }
+	button {
+		min-height: 44px;
+		padding: 0;
+		border: 0;
+		background: none;
+		color: inherit;
+		font: inherit;
+		cursor: pointer;
+		touch-action: manipulation;
+	}
+	button[aria-pressed='true'] { color: #11110f; text-decoration: underline; text-underline-offset: 7px; text-decoration-thickness: 1px; }
+	button:hover { color: #11110f; }
+	button:focus-visible { outline: 1px solid #464642; outline-offset: 4px; }
+	input:focus { outline: none; }
+	.shelf-search { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #dededb; }
+	.shelf-search svg { flex: none; }
+	input { width: 170px; min-width: 0; min-height: 44px; padding: 0; border: 0; border-radius: 0; background: transparent; color: #11110f; font: inherit; }
+	input::placeholder { color: #6e6e69; opacity: 1; }
+	.shelf-search:focus-within { border-color: #464642; }
+	.shelf-empty { padding: 44px 24px 96px; text-align: center; color: #6e6e69; font: 13px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+	.shelf-empty p { margin: 0 0 8px; }
+	.shelf-empty button { color: #11110f; text-decoration: underline; text-underline-offset: 4px; }
+	@media (min-width: 1360px) { .shelf-tools { width: min(1330px, 100%); } }
+	@media (max-width: 1023px) { .shelf-tools { padding-inline: 24px; } }
+	@media (max-width: 599px) {
+		.shelf-tools { flex-direction: column; align-items: stretch; gap: 10px; padding-top: 20px; }
+		.shelf-filters { justify-content: space-between; gap: 12px; }
+		.shelf-search { width: 100%; }
+		input { width: 100%; font-size: 16px; }
+	}
+	@media (max-width: 519px) { .shelf-tools { padding-inline: 20px; } }
+</style>

@@ -1,5 +1,5 @@
 ---
-import BookGrid from '../components/BookGrid.astro';
+import BookShelf from '../components/BookShelf.astro';
 import Layout from '../layouts/Layout.astro';
 import { books, usesPlaceholderData } from '../lib/books';
 ---
@@ -10,8 +10,10 @@ import { books, usesPlaceholderData } from '../lib/books';
 	noIndex={usesPlaceholderData}
 	bodyClass="gallery-page"
 >
-	<main aria-label="Personal book gallery">
-		<BookGrid books={books} />
+	<a class="skip-link" href="#books">Skip to books</a>
+	<main id="books" tabindex="-1" aria-label="Personal book gallery">
+		<h1 class="sr-only">Reading — a personal book gallery</h1>
+		<BookShelf books={books} />
 	</main>
 </Layout>
 
